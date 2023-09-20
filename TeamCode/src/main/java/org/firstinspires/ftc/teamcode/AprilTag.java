@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -52,6 +53,8 @@ public class AprilTag extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
+            visionPortal.resumeStreaming();
+
             while (opModeIsActive()) {
 
                 telemetryAprilTag();
@@ -90,6 +93,7 @@ public class AprilTag extends LinearOpMode {
                 .setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
                 .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
 
+
                 // == CAMERA CALIBRATION ==
                 // If you do not manually specify calibration parameters, the SDK will attempt
                 // to load a predefined calibration for your camera.
@@ -125,6 +129,8 @@ public class AprilTag extends LinearOpMode {
 
         // Set and enable the processor.
         builder.addProcessor(aprilTag);
+        builder.enableLiveView(true);
+
 
         // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
