@@ -26,6 +26,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -68,40 +69,48 @@ public class SimpleDrive extends LinearOpMode{
     private DcMotor rightRear;
     private DcMotor leftRear;
 
-    Gamepad gamepad1;
+    public float ypower;
+    public float xpower;
+    public float rpower;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightFront.setZeroPowerBehavior(BRAKE);
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         leftFront.setZeroPowerBehavior(BRAKE);
         rightRear = hardwareMap.get(DcMotor.class, "rightRear");
         rightRear.setZeroPowerBehavior(BRAKE);
+        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
         leftRear = hardwareMap.get(DcMotor.class, "leftRear");
         leftRear.setZeroPowerBehavior(BRAKE);
 
         Vector<Float> vel = new Vector<>();
 
-        float xpower, ypower, rpower;
 
         waitForStart();
         while (opModeIsActive()){
             ypower = this.gamepad1.left_stick_y;
-            xpower = this.gamepad1.left_stick_x;
-            rpower = this.gamepad1.right_stick_x;
+            xpower = -this.gamepad1.left_stick_x;
+            rpower = -this.gamepad1.right_stick_x;
 
             boolean y = this.gamepad1.right_bumper;
 
             float staticspeed = 1;
 
-            float speed = staticspeed*(y ? .5f : 1.f);
+            float speed = staticspeed*(y ? .25f : .5f);
 
             leftFront.setPower(speed*ypower+speed*xpower+speed*rpower);
             rightFront.setPower(speed*ypower-speed*xpower-speed*rpower);
             leftRear.setPower(speed*ypower-speed*xpower+speed*rpower);
             rightRear.setPower(speed*ypower+speed*xpower-speed*rpower);
+
+            telemetry.addLine("Left Stick Vector: " + ypower + ", " + xpower);
+            telemetry.addLine("" + gamepad1.y);
+            telemetry.addLine("" + gamepad1.left_stick_y);
+            telemetry.update();
 
         }
 

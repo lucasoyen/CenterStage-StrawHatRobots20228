@@ -60,7 +60,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
  */
 
 @Config
-@TeleOp(group = "drive")
+
 public class SampleMecanumDrive extends MecanumDrive{
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
