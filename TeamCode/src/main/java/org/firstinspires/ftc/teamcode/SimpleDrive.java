@@ -98,7 +98,7 @@ public class SimpleDrive extends LinearOpMode{
 
             boolean y = this.gamepad1.right_bumper;
 
-            float staticspeed = 1;
+            float staticspeed = 2;
 
             float speed = staticspeed*(y ? .25f : .5f);
 
