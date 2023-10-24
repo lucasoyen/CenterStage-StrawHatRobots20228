@@ -31,6 +31,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
@@ -70,6 +71,12 @@ public class SimpleDrive extends LinearOpMode{
     private DcMotor rightRear;
     private DcMotor leftRear;
 
+    private Servo rwrist;
+    private Servo lwrist;
+    private Servo rotator;
+    private Servo rclaw;
+    private Servo lclaw;
+
     public float ypower;
     public float xpower;
     public float rpower;
@@ -81,16 +88,22 @@ public class SimpleDrive extends LinearOpMode{
 
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightFront.setZeroPowerBehavior(BRAKE);
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
         leftFront = hardwareMap.get(DcMotor.class, "leftFront");
         leftFront.setZeroPowerBehavior(BRAKE);
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
         rightRear = hardwareMap.get(DcMotor.class, "rightRear");
         rightRear.setZeroPowerBehavior(BRAKE);
-        rightRear.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightRear.setDirection(DcMotorSimple.Direction.FORWARD);
         leftRear = hardwareMap.get(DcMotor.class, "leftRear");
         leftRear.setZeroPowerBehavior(BRAKE);
+        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        Vector<Float> vel = new Vector<>();
+        rwrist = hardwareMap.get(Servo.class,"rwrist");
+        lwrist = hardwareMap.get(Servo.class,"lwrist");
+        rotator = hardwareMap.get(Servo.class,"rotator");
+        rclaw = hardwareMap.get(Servo.class,"rclaw");
+        lclaw = hardwareMap.get(Servo.class,"lclaw");
 
 
         waitForStart();
@@ -101,9 +114,9 @@ public class SimpleDrive extends LinearOpMode{
 
             boolean y = this.gamepad1.right_bumper;
 
-            float staticspeed = 2;
+            float staticspeed = 1;
 
-            float speed = staticspeed*(y ? .25f : .5f);
+            float speed = staticspeed*(y ? .5f : 1f);
 
             leftFront.setPower(speed*ypower+speed*xpower+speed*rpower);
             rightFront.setPower(speed*ypower-speed*xpower-speed*rpower);
