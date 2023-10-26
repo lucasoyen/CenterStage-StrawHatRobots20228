@@ -77,6 +77,9 @@ public class SimpleDrive extends LinearOpMode{
     private Servo rclaw;
     private Servo lclaw;
 
+    private DcMotor michael1;
+    private DcMotor michael2;
+
     public float ypower;
     public float xpower;
     public float rpower;
@@ -100,33 +103,74 @@ public class SimpleDrive extends LinearOpMode{
         leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
 
         rwrist = hardwareMap.get(Servo.class,"rwrist");
+        rwrist.setDirection(Servo.Direction.REVERSE);
         lwrist = hardwareMap.get(Servo.class,"lwrist");
         rotator = hardwareMap.get(Servo.class,"rotator");
         rclaw = hardwareMap.get(Servo.class,"rclaw");
         lclaw = hardwareMap.get(Servo.class,"lclaw");
 
 
+        michael1 = hardwareMap.get(DcMotor.class,"arm1");
+        michael1.setDirection(DcMotorSimple.Direction.REVERSE);
+        michael2 = hardwareMap.get(DcMotor.class,"arm2");
+        michael1.setZeroPowerBehavior(BRAKE);
+        michael2.setZeroPowerBehavior(BRAKE);
+
         waitForStart();
+        rwrist.setPosition(0);
+        lwrist.setPosition(0);
+        rclaw.setPosition(0);
+        lclaw.setPosition(0);
+        //lucass encoded cock
+        //lwrist.setPosition(rwrist.getPosition());
         while (opModeIsActive()){
             ypower = this.gamepad1.left_stick_y;
-            xpower = -this.gamepad1.left_stick_x;
-            rpower = -this.gamepad1.right_stick_x;
+            xpower = this.gamepad1.left_stick_x;
+            rpower = this.gamepad1.right_stick_x;
 
-            boolean y = this.gamepad1.right_bumper;
+            boolean rb = this.gamepad1.right_bumper;
+
+            michael1.setPower(-this.gamepad2.left_stick_y);
+            michael2.setPower(-this.gamepad2.left_stick_y);
+
+            if(rwrist.getPosition()<0.3322){
+                rwrist.setPosition(rwrist.getPosition()+this.gamepad2.right_stick_y/50);
+            }else{
+                rwrist.setPosition(0.32);
+            }
+            if(lwrist.getPosition()<0.3322){
+                lwrist.setPosition(lwrist.getPosition()+this.gamepad2.right_stick_y/50);
+            }else{
+                lwrist.setPosition(0.32);
+            }
+
+            if(michael1.getCurrentPosition()<1 || michael2.getCurrentPosition()<1){
+                michael1.setPower(0.5);
+                michael2.setPower(0.5);
+            }
+            if(michael1.getCurrentPosition()>3200||michael2.getCurrentPosition()>3200){
+                michael1.setPower(-0.5);
+                michael2.setPower(-0.5);
+            }
 
             float staticspeed = 1;
 
-            float speed = staticspeed*(y ? .5f : 1f);
+            float speed = staticspeed*(rb ? .5f : 1f);
 
             leftFront.setPower(speed*ypower+speed*xpower+speed*rpower);
             rightFront.setPower(speed*ypower-speed*xpower-speed*rpower);
             leftRear.setPower(speed*ypower-speed*xpower+speed*rpower);
             rightRear.setPower(speed*ypower+speed*xpower-speed*rpower);
 
-            telemetry.addLine("Left Stick Vector: " + ypower + ", " + xpower);
-            telemetry.addLine("" + gamepad1.y);
-            telemetry.addLine("" + gamepad1.left_stick_y);
+
+
+            telemetry.addLine("Right Wrist: " + rwrist.getPosition());
+            telemetry.addLine("Left Wrist: " + lwrist.getPosition());
+            telemetry.addLine("Arm 1: " + michael1.getCurrentPosition());
+            telemetry.addLine("Arm 2: " + michael1.getCurrentPosition());
             telemetry.update();
+
+
 
         }
 
