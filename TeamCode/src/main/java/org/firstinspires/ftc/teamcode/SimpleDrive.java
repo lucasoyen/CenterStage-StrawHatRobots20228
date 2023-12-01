@@ -6,7 +6,12 @@ import java.util.Vector;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import androidx.annotation.NonNull;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.drive.DriveSignal;
@@ -66,19 +71,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 @TeleOp(group = "drive")
 public class SimpleDrive extends LinearOpMode{
-    private DcMotor rightFront;
-    private DcMotor leftFront;
-    private DcMotor rightRear;
-    private DcMotor leftRear;
 
     private Servo rwrist;
     private Servo lwrist;
-    private Servo rotator;
-    private Servo rclaw;
-    private Servo lclaw;
-
+    private Servo door;
     private DcMotor michael1;
     private DcMotor michael2;
+    private DcMotor intake;
 
     public float ypower;
     public float xpower;
@@ -88,26 +87,15 @@ public class SimpleDrive extends LinearOpMode{
     public void runOpMode() throws InterruptedException {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        rightFront.setZeroPowerBehavior(BRAKE);
-        rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
-        leftFront.setZeroPowerBehavior(BRAKE);
-        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightRear = hardwareMap.get(DcMotor.class, "rightRear");
-        rightRear.setZeroPowerBehavior(BRAKE);
-        rightRear.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftRear = hardwareMap.get(DcMotor.class, "leftRear");
-        leftRear.setZeroPowerBehavior(BRAKE);
-        leftRear.setDirection(DcMotorSimple.Direction.FORWARD);
-
+        drive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        drive.setZeroPowerBehavior(BRAKE);
+        intake = hardwareMap.get(DcMotor.class,"intake");
+        hardwareMap.get(DcMotor.class,"rightFront").setDirection(DcMotorSimple.Direction.REVERSE);
+        hardwareMap.get(DcMotor.class,"rightRear").setDirection(DcMotorSimple.Direction.REVERSE);
         rwrist = hardwareMap.get(Servo.class,"rwrist");
         rwrist.setDirection(Servo.Direction.REVERSE);
         lwrist = hardwareMap.get(Servo.class,"lwrist");
-        rotator = hardwareMap.get(Servo.class,"rotator");
-        rclaw = hardwareMap.get(Servo.class,"rclaw");
-        lclaw = hardwareMap.get(Servo.class,"lclaw");
+        door = hardwareMap.get(Servo.class,"doorServo");
 
 
         michael1 = hardwareMap.get(DcMotor.class,"arm1");
@@ -119,21 +107,14 @@ public class SimpleDrive extends LinearOpMode{
         waitForStart();
         rwrist.setPosition(0);
         lwrist.setPosition(0);
-        rclaw.setPosition(0);
-        lclaw.setPosition(0);
-        //lucass encoded cock
+        door.setPosition(0);
         //lwrist.setPosition(rwrist.getPosition());
         while (opModeIsActive()){
-            ypower = this.gamepad1.left_stick_y;
-            xpower = this.gamepad1.left_stick_x;
-            rpower = this.gamepad1.right_stick_x;
-
             boolean rb = this.gamepad1.right_bumper;
+            michael1.setPower(this.gamepad2.left_stick_y==0?0.1:-gamepad2.left_stick_y);
+            michael2.setPower(this.gamepad2.left_stick_y==0?0.1:-gamepad2.left_stick_y);
 
-            michael1.setPower(-this.gamepad2.left_stick_y);
-            michael2.setPower(-this.gamepad2.left_stick_y);
-
-            if(rwrist.getPosition()<0.3322){
+            /*if(rwrist.getPosition()<0.3322){
                 rwrist.setPosition(rwrist.getPosition()+this.gamepad2.right_stick_y/50);
             }else{
                 rwrist.setPosition(0.32);
@@ -151,16 +132,40 @@ public class SimpleDrive extends LinearOpMode{
             if(michael1.getCurrentPosition()>3200||michael2.getCurrentPosition()>3200){
                 michael1.setPower(-0.5);
                 michael2.setPower(-0.5);
+            }*/
+            if(gamepad2.a){
+                door.setPosition(0.6);
+            }
+            if(gamepad2.b){
+                door.setPosition(0);
+            }
+            if(gamepad2.x){
+                rwrist.setPosition(0.35444444);
+                lwrist.setPosition(0.34166666);
+            }
+            intake.setPower(gamepad2.left_trigger*(gamepad2.left_bumper?-1:1));
+            rwrist.setPosition(rwrist.getPosition()+this.gamepad2.right_stick_y/75);
+            lwrist.setPosition(lwrist.getPosition()+this.gamepad2.right_stick_y/75);
+
+            if(michael1.getCurrentPosition()<150){
+                rwrist.setPosition(0.0983333333);
+                lwrist.setPosition(0.7722222222);
+            }else if(michael1.getCurrentPosition()<280){
+                rwrist.setPosition(0.06999999999);
+                lwrist.setPosition(0.06944444444);
             }
 
             float staticspeed = 1;
 
             float speed = staticspeed*(rb ? .5f : 1f);
 
-            leftFront.setPower(speed*ypower+speed*xpower+speed*rpower);
-            rightFront.setPower(speed*ypower-speed*xpower-speed*rpower);
-            leftRear.setPower(speed*ypower-speed*xpower+speed*rpower);
-            rightRear.setPower(speed*ypower+speed*xpower-speed*rpower);
+            drive.setWeightedDrivePower(
+                    new Pose2d(
+                            gamepad1.left_stick_y,
+                            gamepad1.left_stick_x,
+                            gamepad1.right_stick_x
+                    ).times(speed)
+            );
 
 
 
