@@ -18,7 +18,7 @@ public class ZeroDoubleServo extends LinearOpMode{
         waitForStart();
         while(opModeIsActive()){
             for (int i=0;i<servos.size();i++) {
-                servos.get(i).setPosition(0);
+                servos.get(i).setPosition(0+gamepad1.right_trigger-gamepad1.left_trigger);
             }
         }
     }

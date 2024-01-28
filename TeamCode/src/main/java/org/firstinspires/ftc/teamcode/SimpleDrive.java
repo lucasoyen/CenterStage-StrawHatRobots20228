@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -72,92 +73,61 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 @TeleOp(group = "drive")
 public class SimpleDrive extends LinearOpMode{
 
-    private Servo rwrist;
-    private Servo lwrist;
-    private Servo door;
-    private DcMotor michael1;
-    private DcMotor michael2;
-    private DcMotor intake;
-
+    private boolean reversible;
+    private int reversed;
+    private DcMotor lift, reach, pullup1,pullup2;
+    private CRServo intake, pullupr1,pullupr2;
     public float ypower;
     public float xpower;
     public float rpower;
 
     @Override
     public void runOpMode() throws InterruptedException {
-
+        reversed = 1;
+        reversible = true;
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         drive.setZeroPowerBehavior(BRAKE);
-        intake = hardwareMap.get(DcMotor.class,"intake");
-        hardwareMap.get(DcMotor.class,"rightFront").setDirection(DcMotorSimple.Direction.REVERSE);
-        hardwareMap.get(DcMotor.class,"rightRear").setDirection(DcMotorSimple.Direction.REVERSE);
-        rwrist = hardwareMap.get(Servo.class,"rwrist");
-        rwrist.setDirection(Servo.Direction.REVERSE);
-        lwrist = hardwareMap.get(Servo.class,"lwrist");
-        door = hardwareMap.get(Servo.class,"doorServo");
-
-
-        michael1 = hardwareMap.get(DcMotor.class,"arm1");
-        michael1.setDirection(DcMotorSimple.Direction.REVERSE);
-        michael2 = hardwareMap.get(DcMotor.class,"arm2");
-        michael1.setZeroPowerBehavior(BRAKE);
-        michael2.setZeroPowerBehavior(BRAKE);
+        lift = hardwareMap.get(DcMotor.class,"lift");
+        reach = hardwareMap.get(DcMotor.class,"reach");
+        intake = hardwareMap.get(CRServo.class,"intake");
+        lift.setZeroPowerBehavior(BRAKE);
+        lift.setDirection(DcMotorSimple.Direction.REVERSE);
+        reach.setZeroPowerBehavior(BRAKE);
+        reach.setDirection(DcMotorSimple.Direction.REVERSE);
+        pullupr1 = hardwareMap.get(CRServo.class,"pullupr1");
+        pullupr2 = hardwareMap.get(CRServo.class,"pullupr2");
+        pullup1 = hardwareMap.get(DcMotor.class,"pullup1");
+        pullup2 = hardwareMap.get(DcMotor.class,"pullup2");
+        pullupr2.setDirection(DcMotorSimple.Direction.REVERSE);
+        pullup2.setDirection(DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
-        rwrist.setPosition(0);
-        lwrist.setPosition(0);
-        door.setPosition(0);
-        //lwrist.setPosition(rwrist.getPosition());
+
         while (opModeIsActive()){
-            boolean rb = this.gamepad1.right_bumper;
-            michael1.setPower(this.gamepad2.left_stick_y==0?0.1:-gamepad2.left_stick_y);
-            michael2.setPower(this.gamepad2.left_stick_y==0?0.1:-gamepad2.left_stick_y);
 
-            /*if(rwrist.getPosition()<0.3322){
-                rwrist.setPosition(rwrist.getPosition()+this.gamepad2.right_stick_y/50);
-            }else{
-                rwrist.setPosition(0.32);
+
+
+            if(gamepad1.left_bumper && reversible){
+                reversed*=-1;
+                reversible=false;
             }
-            if(lwrist.getPosition()<0.3322){
-                lwrist.setPosition(lwrist.getPosition()+this.gamepad2.right_stick_y/50);
-            }else{
-                lwrist.setPosition(0.32);
+            if(!gamepad1.left_bumper && !reversible){
+                reversible=true;
             }
 
-            if(michael1.getCurrentPosition()<1 || michael2.getCurrentPosition()<1){
-                michael1.setPower(0.5);
-                michael2.setPower(0.5);
-            }
-            if(michael1.getCurrentPosition()>3200||michael2.getCurrentPosition()>3200){
-                michael1.setPower(-0.5);
-                michael2.setPower(-0.5);
-            }*/
-            if(gamepad2.a){
-                door.setPosition(0.6);
-            }
-            if(gamepad2.b){
-                door.setPosition(0);
-            }
-            if(gamepad2.x){
-                rwrist.setPosition(0.35444444);
-                lwrist.setPosition(0.34166666);
-            }
-            intake.setPower(gamepad2.left_trigger*(gamepad2.left_bumper?-1:1));
-            rwrist.setPosition(rwrist.getPosition()+this.gamepad2.right_stick_y/75);
-            lwrist.setPosition(lwrist.getPosition()+this.gamepad2.right_stick_y/75);
+            intake.setPower(this.gamepad2.right_trigger);
+            lift.setPower(lift.getCurrentPosition()<-1600?0.1:0+this.gamepad2.left_stick_y);
+            reach.setPower(lift.getCurrentPosition()<-1600?0.1:0+this.gamepad2.left_stick_x);
 
-            if(michael1.getCurrentPosition()<150){
-                rwrist.setPosition(0.0983333333);
-                lwrist.setPosition(0.7722222222);
-            }else if(michael1.getCurrentPosition()<280){
-                rwrist.setPosition(0.06999999999);
-                lwrist.setPosition(0.06944444444);
-            }
+            pullupr1.setPower(gamepad2.right_stick_y);
+            pullupr2.setPower(gamepad2.right_stick_y);
+            pullup1.setPower(gamepad2.right_stick_x);
+            pullup2.setPower(gamepad2.right_stick_x);
 
-            float staticspeed = 1;
+            float staticspeed = 0.8f;
 
-            float speed = staticspeed*(rb ? .5f : 1f);
+            float speed = staticspeed*(this.gamepad1.right_bumper ? .5f : 1f)*reversed;
 
             drive.setWeightedDrivePower(
                     new Pose2d(
@@ -167,12 +137,6 @@ public class SimpleDrive extends LinearOpMode{
                     ).times(speed)
             );
 
-
-
-            telemetry.addLine("Right Wrist: " + rwrist.getPosition());
-            telemetry.addLine("Left Wrist: " + lwrist.getPosition());
-            telemetry.addLine("Arm 1: " + michael1.getCurrentPosition());
-            telemetry.addLine("Arm 2: " + michael1.getCurrentPosition());
             telemetry.update();
 
 
